@@ -1,0 +1,30 @@
+# General
+.DS_Store
+.env
+.env.*
+!.env.example
+venv/
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+
+# Python
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Node / Frontend
+web/node_modules/
+dist/
+build/
+.npmrc
+
+# Local storage for uploads
+storage/
+!storage/.gitkeep
+
+# Build artifacts
+coverage/
+reports/
