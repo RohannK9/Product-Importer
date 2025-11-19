@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import uuid
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterator
@@ -42,7 +43,28 @@ def ingest_products_from_csv(self, job_id: str) -> None:
             logger.error("Upload job %s not found", job_id)
             return
 
-        file_path = Path(job.storage_path)
+        # Determine if file is in S3 or local storage
+        storage_path = job.storage_path
+        is_s3 = storage_path.startswith("s3://")
+        
+        if is_s3:
+            # Download from S3 to temporary local file
+            from product_importer.db.storage_deps import get_storage
+            storage = get_storage()
+            
+            temp_file = Path(f"/tmp/{uuid.uuid4()}.csv")
+            logger.info(f"Downloading S3 file {storage_path} to {temp_file}")
+            
+            try:
+                storage.download_to_path(storage_path, temp_file)
+                file_path = temp_file
+            except Exception as e:
+                logger.error(f"Failed to download file from S3: {e}")
+                raise
+        else:
+            # File is already local
+            file_path = Path(storage_path)
+        
         job.status = UploadStatus.PARSING
         session.add(job)
         session.commit()
@@ -153,4 +175,11 @@ def ingest_products_from_csv(self, job_id: str) -> None:
             session.commit()
         raise self.retry(exc=exc, countdown=10)
     finally:
+        # Clean up temporary S3 download file
+        if is_s3 and 'temp_file' in locals():
+            try:
+                temp_file.unlink(missing_ok=True)
+                logger.info(f"Cleaned up temporary file {temp_file}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp file: {e}")
         session.close()

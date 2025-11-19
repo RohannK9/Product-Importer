@@ -31,8 +31,18 @@ class Settings(BaseSettings):
     celery_broker_url: str | None = None
     celery_result_backend: str | None = None
 
-    upload_tmp_dir: str = Field(default="/tmp/uploads")
+    # Storage configuration
+    storage_backend: str = Field(default="s3")  # "local" or "s3"
+    upload_tmp_dir: str = Field(default="/tmp/uploads")  # Used for local storage
     max_upload_size_mb: int = Field(default=600)
+    
+    # S3 configuration
+    s3_bucket_name: str | None = Field(default=None)
+    s3_region: str = Field(default="us-east-1")
+    s3_endpoint_url: str | None = Field(default=None)  # For Cloudflare R2, MinIO, etc.
+    aws_access_key_id: str | None = Field(default=None)
+    aws_secret_access_key: str | None = Field(default=None)
+    
     webhook_request_timeout: float = Field(default=5.0)
     webhook_max_retries: int = Field(default=3)
 

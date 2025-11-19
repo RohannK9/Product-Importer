@@ -13,3 +13,5 @@ typer==0.12.5
 loguru==0.7.2
 python-multipart==0.0.9
 alembic==1.13.2
+psycopg2-binary
+boto3==1.35.76

@@ -4,21 +4,20 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from product_importer.core.config import get_settings
 from product_importer.db.deps import get_db
+from product_importer.db.storage_deps import get_storage
 from product_importer.schemas.upload import UploadInitResponse, UploadJobListResponse, UploadJobResponse
+from product_importer.services.s3_storage import S3Storage
 from product_importer.services.storage import FileStorage
 from product_importer.services.upload_service import UploadService
 
 router = APIRouter()
-settings = get_settings()
 
 
-def get_storage() -> FileStorage:
-    return FileStorage(settings.upload_tmp_dir, max_size_bytes=settings.max_upload_size_mb * 1024 * 1024)
-
-
-def get_service(db=Depends(get_db), storage: FileStorage = Depends(get_storage)) -> UploadService:
+def get_service(
+    db=Depends(get_db),
+    storage: FileStorage | S3Storage = Depends(get_storage),
+) -> UploadService:
     return UploadService(db, storage)
 
 
